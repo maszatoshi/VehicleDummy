@@ -8,19 +8,17 @@ namespace VehicleDummy.Controllers
     [Route("[controller]/[action]")]
     public class VehicleTestingController : Controller
     {
-        private readonly ILogger<VehicleTestingController> _logger;
         private readonly IVehicleRepository _vehicleRepository;
         private readonly IShopRepository _shopRepository;
         private readonly IMeasurementRepository _measurementRepository;
         private readonly IMeasurementPointRepository _measurementPointRepository;
 
-        public VehicleTestingController(ILogger<VehicleTestingController> logger,
+        public VehicleTestingController(
                                     IMeasurementPointRepository measurementPointRepository,
                                     IMeasurementRepository measurementRepository,
                                     IShopRepository shopRepository,
                                     IVehicleRepository vehicleRepository)
         {
-            _logger = logger;
             _vehicleRepository = vehicleRepository;
             _measurementRepository = measurementRepository;
             _measurementPointRepository = measurementPointRepository;
@@ -29,7 +27,7 @@ namespace VehicleDummy.Controllers
 
         [HttpGet(Name = "GetMeasurementDataList/{count}")]
         [ActionName("GetMeasurementDataList")]
-        public async Task<ActionResult> GetMeasurementDataList(int count)
+        public async Task<ActionResult<List<MeasurementResponse>>> GetMeasurementDataList(int count)
         {
             List<MeasurementResponse> result = new();
             List<Measurement> measurements = await _measurementRepository.GetTopMeasurementsAsnyc(count);
@@ -50,7 +48,7 @@ namespace VehicleDummy.Controllers
 
         [HttpPost(Name = "GetMeasurementDataListByDate")]
         [ActionName("GetMeasurementDataListByDate")]
-        public async Task<ActionResult> GetMeasurementDataListByDate(string date)
+        public async Task<ActionResult<List<MeasurementResponse>>> GetMeasurementDataListByDate(string date)
         {
             List<MeasurementResponse> result = new ();
             if (DateTime.TryParse(date, out DateTime dateTime))
@@ -79,7 +77,7 @@ namespace VehicleDummy.Controllers
 
         [HttpPost(Name = "GetMeasurementsByJSN")]
         [ActionName("GetMeasurementsByJSN")]
-        public async Task<ActionResult> GetMeasurementsByJSN(string jsn)
+        public async Task<ActionResult<List<MeasurementResponse>>> GetMeasurementsByJSN(string jsn)
         {
             List<MeasurementResponse> result = new();
             Vehicle vehicle = await _vehicleRepository.GetVehicleByJSNAsync(jsn);
@@ -107,7 +105,7 @@ namespace VehicleDummy.Controllers
 
         [HttpPost(Name = "GetMeasurementsByShopName")]
         [ActionName("GetMeasurementsByShopName")]
-        public async Task<ActionResult> GetMeasurementsByShopName(string shopName)
+        public async Task<ActionResult<List<MeasurementResponse>>> GetMeasurementsByShopName(string shopName)
         {
             List<MeasurementResponse> result = new();
             Shop shop = await _shopRepository.GetShopByNameAsync(shopName);
@@ -135,7 +133,7 @@ namespace VehicleDummy.Controllers
 
         [HttpPost(Name = "GetMeasurementsByMeasurementPointName")]
         [ActionName("GetMeasurementsByMeasurementPointName")]
-        public async Task<ActionResult> GetMeasurementsByMeasurementPointName(string measurementPointName)
+        public async Task<ActionResult<List<MeasurementResponse>>> GetMeasurementsByMeasurementPointName(string measurementPointName)
         {
             List<MeasurementResponse> result = new();
             MeasurementPoint measurementPoint = await _measurementPointRepository.GetMeasurementPointByNameAsync(measurementPointName);
@@ -203,7 +201,7 @@ namespace VehicleDummy.Controllers
 
         [HttpGet(Name = "GetMeasurementPoints")]
         [ActionName("GetMeasurementPoints")]
-        public async Task<ActionResult> GetMeasurementPoints()
+        public async Task<ActionResult<List<MeasurementPoint>>> GetMeasurementPoints()
             
         {
             List<MeasurementPoint> result = await _measurementPointRepository.GetAllMeasurementPointAsync();
@@ -212,7 +210,7 @@ namespace VehicleDummy.Controllers
 
         [HttpGet(Name = "GetMeasurementPointsByName/{name}")]
         [ActionName("GetMeasurementPointsByName")]
-        public async Task<ActionResult> GetMeasurementPoints(string name)
+        public async Task<ActionResult<MeasurementPoint>> GetMeasurementPointByName(string name)
 
         {
             MeasurementPoint result = await _measurementPointRepository.GetMeasurementPointByNameAsync(name);
@@ -224,7 +222,7 @@ namespace VehicleDummy.Controllers
 
         [HttpGet(Name = "GetVehicles")]
         [ActionName("GetVehicles")]
-        public async Task<ActionResult> GetVehicles()
+        public async Task<ActionResult<List<Vehicle>>> GetVehicles()
         {
             List<Vehicle> result = await _vehicleRepository.GetAllVehicleAsync();
             return Ok(result);
@@ -232,7 +230,7 @@ namespace VehicleDummy.Controllers
 
         [HttpGet(Name = "GetVehicleByJSN/{jsn}")]
         [ActionName("GetVehicleByJSN")]
-        public async Task<ActionResult> GetVehicleByJSN(string jsn)
+        public async Task<ActionResult<Vehicle>> GetVehicleByJSN(string jsn)
         {
             Vehicle result = await _vehicleRepository.GetVehicleByJSNAsync(jsn);
             if (result == null)
@@ -243,7 +241,7 @@ namespace VehicleDummy.Controllers
 
         [HttpGet(Name = "GetShops")]
         [ActionName("GetShops")]
-        public async Task<ActionResult> GetShops()
+        public async Task<ActionResult<List<Shop>>> GetShops()
         {
             List<Shop> result = await _shopRepository.GetAllShopAsync();
             return Ok(result);
@@ -251,10 +249,13 @@ namespace VehicleDummy.Controllers
 
         [HttpGet(Name = "GetShopByName/{shopName}")]
         [ActionName("GetShopByName")]
-        public async Task<ActionResult> GetShopByName(string shopName)
+        public async Task<ActionResult<Shop>> GetShopByName(string shopName)
         {
             Shop result = await _shopRepository.GetShopByNameAsync(shopName);
-            return Ok(result);
+            if (result == null)
+                return BadRequest($"Unable to find shop by name '{shopName}'.");
+            else
+                return Ok(result);
         }
 
         
